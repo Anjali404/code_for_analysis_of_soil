@@ -1,1 +1,53 @@
+#include <DHT.h>
+#include <LiquidCrystal.h>
+
+#define DHTPIN 2
+#define SENSOR_PIN A0
+#define RELAY_PIN 5
+#define AIR_VALUE 790
+#define WATER_VALUE 390
+
+DHT dht(DHTPIN, DHT11);
+LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
+
+int soilMoistureValue = 0;
+int soilmoisturepercent = 0;
+
+void setup() {
+  Serial.begin(115200);
+  dht.begin();
+  lcd.begin(16, 2);
+  pinMode(RELAY_PIN, OUTPUT);
+}
+
+void loop() {
+  float h = dht.readHumidity();
+  float t = dht.readTemperature();
+  soilMoistureValue = analogRead(SENSOR_PIN);
+  soilmoisturepercent = map(soilMoistureValue, AIR_VALUE, WATER_VALUE, 0, 100);
+
+  if (soilmoisturepercent >= 0 && soilmoisturepercent <= 100) {
+    lcd.clear(); // Clear the LCD display
+    lcd.setCursor(0, 0);
+    lcd.print("Soil RH:");
+    lcd.print(soilmoisturepercent);
+    lcd.print(" %");
+    lcd.setCursor(0, 1);
+    lcd.print("Air RH:");
+    lcd.print(h);
+    lcd.print(" %");
+    lcd.setCursor(8, 1);
+    lcd.print("Temp:");
+    lcd.print(t);
+    lcd.print(" C");
+
+    if (soilmoisturepercent <= 30) {
+      digitalWrite(RELAY_PIN, HIGH);
+      Serial.println("Motor is ON");
+    }
+    else {
+      digitalWrite(RELAY_PIN, LOW);
+    }
+  }
+}
 
